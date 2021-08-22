@@ -1,16 +1,28 @@
 library(tidygeocoder)
 library(sf)
 
-sa1s = st_read("data/sa1/SA1_2021_AUST_GDA2020.shp")
-sa1s = sa1s[sa1s$STE_NAME21 == "Victoria",]
+sa1s = st_read("../data/vic_sa1/MB_2016_VIC.shp")
+sa1s = sa1s[sa1s$STE_NAME16 == "Victoria",]
+
+address_to_coords = function(address) {
+    out = geo(address=address, method="osm")
+    c(lon=out$long, lat=out$lat)
+}
+
+coords_to_sa1 = function(lat, lon) {
+    x = c(lon, lat)
+    point = st_sfc(st_point(x), crs=4283)
+    idx = st_intersects(point, sa1s)
+    sa1s[idx[[1]],]
+}
 
 address_to_sa1 = function(address) {
     out = geo(address=address, method="osm")
     x = c(out$long, out$lat)
 
-    point = st_sfc(st_point(x), crs=7844)
+    point = st_sfc(st_point(x), crs=4283)
     idx = st_intersects(point, sa1s)
-    sa1s[idx[[1]],]$SA1_CODE21
+    sa1s[idx[[1]],]
 }
 
 address_to_sa1("361 Mount Dandenong Tourist Rd, Sassafras")
