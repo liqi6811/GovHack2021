@@ -72,7 +72,7 @@ server = function(input, output){
       else
         address_to_coords(input$Address)
     })
-    point <- debounce(point, 500)
+    #point <- debounce(point, 500)
     sa1 <- reactive({coords_to_sa1(point()["lat"], point()["lon"])})
 
     output$water_company <- renderText({paste(
@@ -80,36 +80,35 @@ server = function(input, output){
       if (is.null(input$Address))
         "please enter your address"
       else
-        #"Fixing"
-        get_company(sa1()$SA1_MAIN16)
+        get_company(sa1()[, SA1_MAIN16])
     )})
     output$sa2 <- renderText({paste(
       "SA2 Name: ",
       if (is.null(input$Address))
         "No residence"
       else
-        sa1()$SA2_NAME16
+        sa1()[, SA2_NAME16]
     )})
     output$sa1 <- renderText({paste(
       "SA1 Code: ",
       if (is.null(input$Address))
         "No residence"
       else
-        sa1()$SA1_MAIN16
+        sa1()[, SA1_MAIN16]
     )})
 
     persons <- reactive({
-      if (is.na(sa1()$SA2_MAIN16))
+      if (is.null(input$Address))
         2 # global weighted average
       else
-        get_usually_resident(sa1()$SA2_MAIN16)
+        get_usually_resident(sa1()[, SA2_MAIN16])
     })
-    size_comparison <- reactive({
-      comp <- "equal"
-      if (input$Occupants != persons())
-        comp <- ifelse(input$Occupants < persons(), "below", "above")
-      sprintf("Your household size of %s is %s the SA2 average (%s)", input$Occupants, comp, persons())
-    })
+    #size_comparison <- reactive({
+    #  comp <- "equal"
+    #  if (input$Occupants != persons())
+    #    comp <- ifelse(input$Occupants < persons(), "below", "above")
+    #  sprintf("Your household size of %s is %s the SA2 average (%s)", input$Occupants, comp, persons())
+    #})
     output$persons <- renderText({
       paste(
         "SA2 average household size is ", persons()
@@ -117,7 +116,13 @@ server = function(input, output){
     })
     output$pricing <- renderText({paste(
       "Bill: $",
-      round(runif(1, 800, 5000),2),
+      new_price(
+        get_company(sa1()[, SA1_MAIN16]),
+        input$Consumption,
+        persons(),
+        has_rainwater = input$Rainwater_tank,
+        has_pool = input$Pool
+      ),
       "p/a"
     )})
 
