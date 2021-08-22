@@ -25,7 +25,7 @@ ui <- fluidPage(
         textOutput("water_company"),
         textOutput("sa1"),
         textOutput("sa2"),
-        textOutput("pricing")
+        tags$h5(textOutput("pricing"), style="color: #222")
       ),
       mainPanel(
         column(
@@ -41,7 +41,7 @@ ui <- fluidPage(
               selectInput('Rainwater_tank', 'Rainwater tank Exclusive to the property?', choices = c("No","Yes")),
               selectInput('Occupants', 'Usual number of occupants?', choices = c("1","2","3","4","5", "6", "7", "8 or more","0/vacant")),
               selectInput('Concession_eligibility', 'Eligible for discount? (For low incomes. Refer to services.dffh.vic.gov.au/water to check eligibility', choices = c("Yes","No")),
-              textInput('Consumption', 'Based on your last, what was your total consumption?'),
+              textInput('Consumption', 'Based on your last bill, what was your total consumption?'),
           ),
           actionButton('resetAll', 'reset'),
         ),
@@ -99,11 +99,11 @@ server = function(input, output){
     output$pricing <- renderText({paste(
       "Bill: $",
       round(runif(1, 800, 5000),2),
-      "/annum"
+      "p/a"
     )})
 
-    lat <- -37.8136
-    lon <- 144.9631
+    lon <- -37.8136
+    lat <- 144.9631
     zoom_level <- reactive({
       if (is.null(input$Address))
         8
@@ -114,13 +114,13 @@ server = function(input, output){
     points <- reactive({
       if (is.null(input$Address))
         cbind(
-          c(145.3125364, 145.3123),
-          c(-37.8424211, -37.8425)
+          c(144.9631),
+          c(-37.8136)
         )
       else
         cbind(
-        c(145.3125364, 145.3123),
-        c(-37.8424211, -37.8425)
+          c(point()["lon"]),
+          c(point()["lat"])
       )
     })
 
@@ -138,12 +138,13 @@ server = function(input, output){
       input$Address
       isolate({
         zoom_lvl <- 8
-        if (!is.null(input$map_zoom)) zoom_lvl <- 13
-        leafletProxy('mymap') %>%
+        if (length(input$Address) > 1) zoom_lvl <- 13
+        leafletProxy("mymap") %>%
           setView(lng = point()["lon"], lat = point()["lat"], zoom = zoom_lvl)
       })
     })
 
-    observeEvent(input$resetAll, {reset("form")})}
+    observeEvent(input$resetAll, {reset("form")})
+  }
 # CODE BELOW: Render a table output named "table_top_10_names"
 shinyApp(ui = ui, server = server)
