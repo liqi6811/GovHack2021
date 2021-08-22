@@ -21,10 +21,11 @@ ui <- fluidPage(
     sidebarLayout(
       sidebarPanel(
         style = "background-color: #f4f4f4; border-radius: 2px;",
-        helpText("Your household summary."),
+        helpText("Your household summary.", style="font-size: 1.75em;"),
         textOutput("water_company"),
         textOutput("sa1"),
         textOutput("sa2"),
+        textOutput("persons"),
         tags$h5(textOutput("pricing"), style="color: #222")
       ),
       mainPanel(
@@ -96,14 +97,32 @@ server = function(input, output){
       else
         sa1()$SA1_MAIN16
     )})
+
+    persons <- reactive({
+      if (is.na(sa1()$SA2_MAIN16))
+        2 # global weighted average
+      else
+        get_usually_resident(sa1()$SA2_MAIN16)
+    })
+    size_comparison <- reactive({
+      comp <- "equal"
+      if (input$Occupants != persons())
+        comp <- ifelse(input$Occupants < persons(), "below", "above")
+      sprintf("Your household size of %s is %s the SA2 average (%s)", input$Occupants, comp, persons())
+    })
+    output$persons <- renderText({
+      paste(
+        "SA2 average household size is ", persons()
+      )
+    })
     output$pricing <- renderText({paste(
       "Bill: $",
       round(runif(1, 800, 5000),2),
       "p/a"
     )})
 
-    lon <- -37.8136
-    lat <- 144.9631
+    lat <- -37.8136
+    lon <- 144.9631
     zoom_level <- reactive({
       if (is.null(input$Address))
         8

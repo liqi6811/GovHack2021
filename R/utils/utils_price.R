@@ -1,9 +1,15 @@
 library(data.table)
 
 sa1_water = fread("../data/sa1_to_water_corporation.csv", key="SA1_CODE21", colClasses = c(SA1_CODE21="character"))
+persons = fread("../data/sa2_persons_water.csv", key="sa2", colClasses = c(sa2="character"))
 
 get_company = function(sa1_code) {
     sa1_water[sa1_code, water_corporation][1]
+}
+
+get_usually_resident = function(sa2) {
+    #sa2 = substr(sa1_code, 1, 7)
+    persons[sa2, persons]
 }
 
 price = function(sa1, company, consumption, cluster) {
